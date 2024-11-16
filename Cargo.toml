@@ -1,7 +1,15 @@
 [package]
 name = "generic_array_storage"
 version = "0.1.0"
+authors = ["Diachenko Artem", "Artem 34ty804krytp92e239eku@gmail.com"]
 edition = "2021"
+description = "`nalgebra` storage implementation backed by `generic_array`"
+documentation = "https://dzuchun.github.io/generic_array_storage/generic_array_storage/index.html"
+readme = "README.md"
+repository = "https://github.com/Dzuchun/generic_array_storage"
+license = "GPL-3.0 license"
+keywords = ["nalgebra", "typenum"]
+categories = ["no-std", "no-std::no-alloc"]
 
 [dependencies]
 generic-array = "1.1.0"
