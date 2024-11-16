@@ -155,3 +155,55 @@ pub type GenericMatrix<T, R, C> = nalgebra::Matrix<
         <<C as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
     >,
 >;
+
+impl<T, const R: usize, const C: usize> From<[[T; R]; C]>
+    for GenericArrayStorage<
+        T,
+        <<AlgNum<R> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+        <<AlgNum<C> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+    >
+where
+    AlgNum<R>: ToTypenum,
+    TNum<R>: IntoArrayLength,
+    <AlgNum<R> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<R> as IntoArrayLength>::ArrayLength>,
+    AlgNum<C>: ToTypenum,
+    TNum<C>: IntoArrayLength,
+    <AlgNum<C> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<C> as IntoArrayLength>::ArrayLength>,
+{
+    fn from(value: [[T; R]; C]) -> Self {
+        GenericArrayStorage(GenericArray::from_array(
+            value.map(GenericArray::from_array),
+        ))
+    }
+}
+
+impl<T, const R: usize, const C: usize>
+    From<
+        GenericArrayStorage<
+            T,
+            <<AlgNum<R> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+            <<AlgNum<C> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+        >,
+    > for [[T; R]; C]
+where
+    AlgNum<R>: ToTypenum,
+    TNum<R>: IntoArrayLength,
+    <AlgNum<R> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<R> as IntoArrayLength>::ArrayLength>,
+    AlgNum<C>: ToTypenum,
+    TNum<C>: IntoArrayLength,
+    <AlgNum<C> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<C> as IntoArrayLength>::ArrayLength>,
+{
+    fn from(
+        value: GenericArrayStorage<
+            T,
+            <<AlgNum<R> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+            <<AlgNum<C> as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+        >,
+    ) -> Self {
+        value.0.into_array().map(GenericArray::into_array)
+    }
+}
