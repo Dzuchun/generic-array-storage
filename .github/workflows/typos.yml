@@ -1,5 +1,5 @@
 # source: https://github.com/crate-ci/typos/blob/master/docs/github-action.md
-name: Test GitHub Action
+name: Spellcheck
 on:
   push: 
     branches:
@@ -7,7 +7,6 @@ on:
 
 jobs:
   spellcheck:
-    name: Spell Check with Typos
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
