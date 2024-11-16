@@ -143,3 +143,15 @@ unsafe impl<R: ArrayLength, C: ArrayLength, T: nalgebra::Scalar> IsContiguous
     for GenericArrayStorage<T, R, C>
 {
 }
+
+/// Alias to [`nalgebra::Matrix`], completely "hinding" `const usize`s away. See crate's documentation on how this is possible.
+pub type GenericMatrix<T, R, C> = nalgebra::Matrix<
+    T,
+    R,
+    C,
+    GenericArrayStorage<
+        T,
+        <<R as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+        <<C as ToTypenum>::Typenum as IntoArrayLength>::ArrayLength,
+    >,
+>;
