@@ -266,3 +266,6 @@ where
         Matrix::from_data(array_storage)
     }
 }
+
+#[cfg(test)]
+mod tests;
