@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload documentation
         if: ${{ !env.ACT }}
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
             path: ./target/doc
 
@@ -62,4 +62,4 @@ jobs:
 
       - name: Deploy documentation
         id: pages
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
