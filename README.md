@@ -42,7 +42,7 @@ then
 
 etc
 
-## What is `genetic_array`?
+## What is `generic_array`?
 
 [`generic_array`] implements arrays sized via `ArrayLength` trait implementors. Namely, it is implemented for `typenum` types, allowing creating an array sized as sum of two other arrays:
 
