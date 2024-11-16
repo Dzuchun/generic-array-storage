@@ -1,3 +1,5 @@
+![CI](https://github.com/Dzuchun/generic_array_storage/actions/workflows/build.yml/badge.svg)
+
 ```text
 This crate does not require nor std nor alloc. You're welcome ❤️
 ```
