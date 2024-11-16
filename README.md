@@ -1,5 +1,5 @@
 ```text
-This crate does no require nor std nor alloc. You're welcome ❤️
+This crate does not require nor std nor alloc. You're welcome ❤️
 ```
 
 Intertop between [`generic_array`] and [`nalgebra`], for `const usize`-hidden array storages.
@@ -46,7 +46,7 @@ etc
 
 ```rust
 # use generic_array::{sequence::Concat, GenericArray};
-// some normal rust arrrays
+// some normal rust arrays
 let arr1: [i32; 3] = [1, 2, 3];
 let arr2: [i32; 2] = [3, 5];
 
