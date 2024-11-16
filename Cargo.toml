@@ -7,3 +7,18 @@ edition = "2021"
 generic-array = "1.1.0"
 nalgebra = { version = "0.33.2", default-features = false }
 typenum = { version = "1.17.0", features = ["no_std"] }
+
+[dev-dependencies]
+nalgebra = { version = "0.33.2" }
+
+[lints.rust]
+rust_2018_idioms = { level = "deny", priority = -1 }
+missing_debug_implementations = "deny"
+missing_docs = "deny"
+unsafe_code = "deny"
+
+[lints.rustdoc]
+broken_intra_doc_links = "forbid"
+
+[lints.clippy]
+module_name_repetitions = "allow"
