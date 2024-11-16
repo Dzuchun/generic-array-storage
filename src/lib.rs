@@ -207,3 +207,62 @@ where
         value.0.into_array().map(GenericArray::into_array)
     }
 }
+
+/// Extension trait, providing convenience operations conversion operations so easier intertop with rest of the ecosystem.
+pub trait GenericMatrixExt<T, const R: usize, const C: usize>
+where
+    AlgNum<R>: ToTypenum,
+    TNum<R>: IntoArrayLength,
+    <AlgNum<R> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<R> as IntoArrayLength>::ArrayLength>,
+    AlgNum<C>: ToTypenum,
+    TNum<C>: IntoArrayLength,
+    <AlgNum<C> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<C> as IntoArrayLength>::ArrayLength>,
+{
+    /// Creates [`GenericMatrix`] from core Rust array.
+    fn from_array(array: [[T; R]; C]) -> Self;
+
+    /// Creates [`GenericMatrix`] from regular `nalgebra` matrix, backed up by [`nalgebra::ArrayStorage`].
+    fn from_regular(
+        regular: Matrix<T, AlgNum<R>, AlgNum<C>, nalgebra::ArrayStorage<T, R, C>>,
+    ) -> Self;
+
+    /// Converts [`GenericMatrix`] into core Rust array.
+    fn into_array(self) -> [[T; R]; C];
+
+    /// Converts [`GenericMatrix`] into regular `nalgebra` matrix, backed up by [`nalgebra::ArrayStorage`].
+    fn into_regular(self) -> Matrix<T, AlgNum<R>, AlgNum<C>, nalgebra::ArrayStorage<T, R, C>>;
+}
+
+impl<T, const R: usize, const C: usize> GenericMatrixExt<T, R, C>
+    for GenericMatrix<T, AlgNum<R>, AlgNum<C>>
+where
+    AlgNum<R>: ToTypenum,
+    TNum<R>: IntoArrayLength,
+    <AlgNum<R> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<R> as IntoArrayLength>::ArrayLength>,
+    AlgNum<C>: ToTypenum,
+    TNum<C>: IntoArrayLength,
+    <AlgNum<C> as ToTypenum>::Typenum:
+        IntoArrayLength<ArrayLength = <TNum<C> as IntoArrayLength>::ArrayLength>,
+{
+    fn from_array(array: [[T; R]; C]) -> Self {
+        Self::from_data(array.into())
+    }
+
+    fn from_regular(
+        regular: Matrix<T, AlgNum<R>, AlgNum<C>, nalgebra::ArrayStorage<T, R, C>>,
+    ) -> Self {
+        Self::from_data(regular.data.0.into())
+    }
+
+    fn into_array(self) -> [[T; R]; C] {
+        self.data.into()
+    }
+
+    fn into_regular(self) -> Matrix<T, AlgNum<R>, AlgNum<C>, nalgebra::ArrayStorage<T, R, C>> {
+        let array_storage: nalgebra::ArrayStorage<T, R, C> = ArrayStorage(self.data.into());
+        Matrix::from_data(array_storage)
+    }
+}
