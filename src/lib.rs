@@ -35,7 +35,10 @@ pub trait Conv {
     /// [`nalgebra`]-faced type (matrix dimension)
     type Nalg: Dim;
 
-    /// [`typenum`]/[`generic_array`]-faced type (generic array length)
+    /// [`typenum`]-faced type (unsigned int)
+    type TNum: Unsigned;
+
+    /// [`generic_array`]-faced type (generic array length)
     type ArrLen: ArrayLength;
 
     /// Constructor method used in [`nalgebra`] implementations
@@ -44,13 +47,16 @@ pub trait Conv {
 
 impl<const N: usize> Conv for nalgebra::Const<N>
 where
-    typenum::Const<N>: generic_array::IntoArrayLength,
+    typenum::Const<N>: generic_array::IntoArrayLength + typenum::ToUInt,
+    <typenum::Const<N> as typenum::ToUInt>::Output: Unsigned,
 {
     const SEAL: Seal = Seal(());
 
     const NUM: usize = N;
 
     type Nalg = nalgebra::Const<N>;
+
+    type TNum = typenum::U<N>;
 
     type ArrLen = <typenum::Const<N> as generic_array::IntoArrayLength>::ArrayLength;
 
@@ -61,13 +67,16 @@ where
 
 impl<const N: usize> Conv for typenum::Const<N>
 where
-    typenum::Const<N>: generic_array::IntoArrayLength,
+    typenum::Const<N>: generic_array::IntoArrayLength + typenum::ToUInt,
+    <typenum::Const<N> as typenum::ToUInt>::Output: Unsigned,
 {
     const SEAL: Seal = Seal(());
 
     const NUM: usize = N;
 
     type Nalg = nalgebra::Const<N>;
+
+    type TNum = typenum::U<N>;
 
     type ArrLen = <typenum::Const<N> as generic_array::IntoArrayLength>::ArrayLength;
 
@@ -82,6 +91,8 @@ impl Conv for typenum::UTerm {
     const NUM: usize = 0;
 
     type Nalg = nalgebra::Const<0>;
+
+    type TNum = typenum::consts::U0;
 
     type ArrLen = Self;
 
@@ -103,6 +114,8 @@ where
 
     type Nalg = <U::Nalg as nalgebra::dimension::DimMul<nalgebra::U2>>::Output;
 
+    type TNum = typenum::operator_aliases::Prod<U::ArrLen, typenum::U2>;
+
     type ArrLen = typenum::operator_aliases::Prod<U::ArrLen, typenum::U2>;
 
     fn new_nalg() -> Self::Nalg {
@@ -123,6 +136,8 @@ where
 
     type Nalg =
         <<typenum::UInt<U, B0> as Conv>::Nalg as nalgebra::dimension::DimAdd<nalgebra::U1>>::Output;
+
+    type TNum = typenum::operator_aliases::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>;
 
     type ArrLen =
         typenum::operator_aliases::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>;
@@ -202,7 +217,7 @@ use nalgebra::{
     allocator::Allocator, ArrayStorage, Dim, IsContiguous, Matrix, Owned, RawStorage,
     RawStorageMut, Scalar, Storage,
 };
-use typenum::{B0, B1};
+use typenum::{Unsigned, B0, B1};
 
 /// A stack-allocated storage, of [`typenum`]-backed col-major two dimensional array
 ///
