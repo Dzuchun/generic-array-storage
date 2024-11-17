@@ -25,7 +25,7 @@ pub struct Seal(());
 /// If you need to convert between them, see [`Comp`].
 ///
 /// This trait is sealed.
-pub trait Conv {
+pub trait Conv: 'static {
     /// See [`Seal`]
     const SEAL: Seal;
 
