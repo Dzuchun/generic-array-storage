@@ -33,7 +33,7 @@ pub trait Conv {
     const NUM: usize;
 
     /// [`nalgebra`]-faced type (matrix dimension)
-    type Nalg: Dim;
+    type Nalg: DimName;
 
     /// [`typenum`]-faced type (unsigned int)
     type TNum: Unsigned;
@@ -104,7 +104,7 @@ impl Conv for typenum::UTerm {
 impl<U> Conv for typenum::UInt<U, B0>
 where
     U: Conv,
-    U::Nalg: nalgebra::dimension::DimMul<nalgebra::U2>,
+    U::Nalg: nalgebra::dimension::DimNameMul<nalgebra::U2>,
     U::ArrLen: core::ops::Mul<typenum::U2>,
     typenum::Prod<U::ArrLen, typenum::U2>: ArrayLength,
 {
@@ -112,7 +112,7 @@ where
 
     const NUM: usize = 2 * U::NUM;
 
-    type Nalg = <U::Nalg as nalgebra::dimension::DimMul<nalgebra::U2>>::Output;
+    type Nalg = <U::Nalg as nalgebra::dimension::DimNameMul<nalgebra::U2>>::Output;
 
     type TNum = typenum::operator_aliases::Prod<U::ArrLen, typenum::U2>;
 
@@ -126,7 +126,7 @@ where
 impl<U> Conv for typenum::UInt<U, B1>
 where
     typenum::UInt<U, B0>: Conv,
-    <typenum::UInt<U, B0> as Conv>::Nalg: nalgebra::dimension::DimAdd<nalgebra::U1>,
+    <typenum::UInt<U, B0> as Conv>::Nalg: nalgebra::dimension::DimNameAdd<nalgebra::U1>,
     <typenum::UInt<U, B0> as Conv>::ArrLen: core::ops::Add<typenum::U1>,
     typenum::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>: ArrayLength,
 {
@@ -134,8 +134,9 @@ where
 
     const NUM: usize = 1 + <typenum::UInt<U, B0> as Conv>::NUM;
 
-    type Nalg =
-        <<typenum::UInt<U, B0> as Conv>::Nalg as nalgebra::dimension::DimAdd<nalgebra::U1>>::Output;
+    type Nalg = <<typenum::UInt<U, B0> as Conv>::Nalg as nalgebra::dimension::DimNameAdd<
+        nalgebra::U1,
+    >>::Output;
 
     type TNum = typenum::operator_aliases::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>;
 
@@ -214,7 +215,7 @@ where
 
 use generic_array::{functional::FunctionalSequence, ArrayLength, GenericArray, IntoArrayLength};
 use nalgebra::{
-    allocator::Allocator, ArrayStorage, Dim, IsContiguous, Matrix, Owned, RawStorage,
+    allocator::Allocator, ArrayStorage, Dim, DimName, IsContiguous, Matrix, Owned, RawStorage,
     RawStorageMut, Scalar, Storage,
 };
 use typenum::{Unsigned, B0, B1};
