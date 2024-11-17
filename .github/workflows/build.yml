@@ -9,7 +9,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
+  run_tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,6 +20,7 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+          components: cargo,rustfmt,clippy
 
       - name: install check-all-fetures
         run: cargo install cargo-all-features
