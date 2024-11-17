@@ -15,7 +15,7 @@ This crate will presumably become obsolete, once const generics are introduced, 
 ```toml
 # Cargo.toml
 [dependencies]
-generic-array-storage = { git = "https://github.com/Dzuchun/generic_array_storage.git" }
+generic_array_storage = { git = "https://github.com/Dzuchun/generic_array_storage.git", branch = "master" }
 ```
 
 # Contribution
