@@ -1,6 +1,8 @@
 #![doc = include_str!("../README.md")]
 #![no_std] // <-- yeah, in case you wondered - there you are, feel free to use it
 
+use core::fmt::Debug;
+
 use generic_array::{functional::FunctionalSequence, ArrayLength, GenericArray, IntoArrayLength};
 use nalgebra::{
     allocator::Allocator, DefaultAllocator, IsContiguous, Matrix, OMatrix, Owned, RawStorage,
@@ -13,11 +15,16 @@ pub use conv::Conv;
 /// A stack-allocated storage, of [`typenum`]-backed col-major two dimensional array
 ///
 /// This struct is transparent and completely public, since it has nothing to hide! Note that [`GenericArray`] is transparent itself, so this struct effectively has the same layout as a two-dimensional array of the corresponding size.
-#[derive(Debug)]
 #[repr(transparent)]
 pub struct GenericArrayStorage<T, R: Conv, C: Conv>(
     pub GenericArray<GenericArray<T, R::TNum>, C::TNum>,
 );
+
+impl<T: Debug, R: Conv, C: Conv> Debug for GenericArrayStorage<T, R, C> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        <GenericArray<GenericArray<T, R::TNum>, C::TNum> as Debug>::fmt(&self.0, f)
+    }
+}
 
 impl<T, R: Conv, C: Conv> Clone for GenericArrayStorage<T, R, C>
 where
