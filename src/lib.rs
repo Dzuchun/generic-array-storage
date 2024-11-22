@@ -1,224 +1,14 @@
 #![doc = include_str!("../README.md")]
 #![no_std] // <-- yeah, in case you wondered - there you are, feel free to use it
 
-/// Nothing to see here
-///
-/// Congratulations, you've found a cute seal pup!
-///
-/// <img src="https://www.startpage.com/av/proxy-image?piurl=https%3A%2F%2Fi.pinimg.com%2Foriginals%2Fb8%2F2f%2F61%2Fb82f6130b6a8d6afbefc07b08e1f8750.jpg&sp=1731807377Td567a79c382f033584e92b2a748b4f2c5e21b672386c3919dd66700457951351" alt="cute baby seal!" width="10%"/>
-///
-/// This tiny thing ensures that [`Conv`], [`Corr`] and [`Comp`] traits are not implemented outside of this crate. There's no strict reasoning for this now, but I might want to use some **unsafe** operations in these trait implementations in the future.
-#[derive(Debug)]
-pub struct Seal(());
-
-/// Convenience trait, used to defining type **conv**ersions
-///
-/// Also, this is the only bound to [`GenericMatrix`] type alias, meaning that all of the following are valid [`GenericMatrix`]es:
-/// ```rust
-/// # use generic_array_storage::GenericMatrix;
-/// type NalgebraMatrix = GenericMatrix<i32, nalgebra::U3, nalgebra::U4>;
-/// type TypenumMatrix = GenericMatrix<i32, typenum::U3, typenum::U4>;
-/// type TypenumConstMatrix = GenericMatrix<i32, typenum::Const<3>, typenum::Const<3>>;
-/// // (nalgebra::Const are actually aliased by nalgebra::{U1, U2, ...})
-/// ```
-///
-/// If you need to convert between them, see [`Comp`].
-///
-/// This trait is sealed.
-pub trait Conv: 'static {
-    /// See [`Seal`]
-    const SEAL: Seal;
-
-    /// A core `usize` corresponding to length/size
-    const NUM: usize;
-
-    /// [`nalgebra`]-faced type (matrix dimension)
-    type Nalg: DimName;
-
-    /// [`typenum`]-faced type (unsigned int)
-    type TNum: Unsigned;
-
-    /// [`generic_array`]-faced type (generic array length)
-    type ArrLen: ArrayLength;
-
-    /// Constructor method used in [`nalgebra`] implementations
-    fn new_nalg() -> Self::Nalg;
-}
-
-impl<const N: usize> Conv for nalgebra::Const<N>
-where
-    typenum::Const<N>: generic_array::IntoArrayLength + typenum::ToUInt,
-    <typenum::Const<N> as typenum::ToUInt>::Output: Unsigned,
-{
-    const SEAL: Seal = Seal(());
-
-    const NUM: usize = N;
-
-    type Nalg = nalgebra::Const<N>;
-
-    type TNum = typenum::U<N>;
-
-    type ArrLen = <typenum::Const<N> as generic_array::IntoArrayLength>::ArrayLength;
-
-    fn new_nalg() -> Self::Nalg {
-        nalgebra::Const::<N>
-    }
-}
-
-impl<const N: usize> Conv for typenum::Const<N>
-where
-    typenum::Const<N>: generic_array::IntoArrayLength + typenum::ToUInt,
-    <typenum::Const<N> as typenum::ToUInt>::Output: Unsigned,
-{
-    const SEAL: Seal = Seal(());
-
-    const NUM: usize = N;
-
-    type Nalg = nalgebra::Const<N>;
-
-    type TNum = typenum::U<N>;
-
-    type ArrLen = <typenum::Const<N> as generic_array::IntoArrayLength>::ArrayLength;
-
-    fn new_nalg() -> Self::Nalg {
-        nalgebra::Const::<N>
-    }
-}
-
-impl Conv for typenum::UTerm {
-    const SEAL: Seal = Seal(());
-
-    const NUM: usize = 0;
-
-    type Nalg = nalgebra::Const<0>;
-
-    type TNum = typenum::consts::U0;
-
-    type ArrLen = Self;
-
-    fn new_nalg() -> Self::Nalg {
-        nalgebra::Const::<0>
-    }
-}
-
-impl<U> Conv for typenum::UInt<U, B0>
-where
-    U: Conv,
-    U::Nalg: nalgebra::dimension::DimNameMul<nalgebra::U2>,
-    U::ArrLen: core::ops::Mul<typenum::U2>,
-    typenum::Prod<U::ArrLen, typenum::U2>: ArrayLength,
-{
-    const SEAL: Seal = Seal(());
-
-    const NUM: usize = 2 * U::NUM;
-
-    type Nalg = <U::Nalg as nalgebra::dimension::DimNameMul<nalgebra::U2>>::Output;
-
-    type TNum = typenum::operator_aliases::Prod<U::ArrLen, typenum::U2>;
-
-    type ArrLen = typenum::operator_aliases::Prod<U::ArrLen, typenum::U2>;
-
-    fn new_nalg() -> Self::Nalg {
-        Self::Nalg::from_usize(Self::NUM)
-    }
-}
-
-impl<U> Conv for typenum::UInt<U, B1>
-where
-    typenum::UInt<U, B0>: Conv,
-    <typenum::UInt<U, B0> as Conv>::Nalg: nalgebra::dimension::DimNameAdd<nalgebra::U1>,
-    <typenum::UInt<U, B0> as Conv>::ArrLen: core::ops::Add<typenum::U1>,
-    typenum::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>: ArrayLength,
-{
-    const SEAL: Seal = Seal(());
-
-    const NUM: usize = 1 + <typenum::UInt<U, B0> as Conv>::NUM;
-
-    type Nalg = <<typenum::UInt<U, B0> as Conv>::Nalg as nalgebra::dimension::DimNameAdd<
-        nalgebra::U1,
-    >>::Output;
-
-    type TNum = typenum::operator_aliases::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>;
-
-    type ArrLen =
-        typenum::operator_aliases::Sum<<typenum::UInt<U, B0> as Conv>::ArrLen, typenum::U1>;
-
-    fn new_nalg() -> Self::Nalg {
-        Self::Nalg::from_usize(Self::NUM)
-    }
-}
-
-/// Convenience trait, used to signify that particular [`Conv`] implementor **corr**esponds to some integer. This has to be a separate trait, since integer correspondence is not something we always need, and the actual point of this crate is to get rid of such bounds. This trait is a way to reintroduce it, if you happen to need that.
-///
-/// Trait defines methods for core array to/from [`GenericArray`] conversion. Implementations are expected to be trivial, i.e. [`GenericArray`] method call or unsafe transmute backed by some explanation.
-///
-/// This trait is sealed.
-pub trait Corr<const N: usize>: Conv {
-    /// See [`Seal`]
-    const SEAL: Seal;
-
-    /// Converts core array to [`GenericArray`]
-    fn array_to_generic<E>(array: [E; N]) -> GenericArray<E, Self::ArrLen>;
-
-    /// Converts [`GenericArray`] to core array
-    fn generic_to_array<E>(generic: GenericArray<E, Self::ArrLen>) -> [E; N];
-}
-
-impl<const N: usize, T> Corr<N> for T
-where
-    T: Conv,
-    typenum::Const<N>: IntoArrayLength<ArrayLength = T::ArrLen>,
-{
-    const SEAL: Seal = Seal(());
-
-    #[inline]
-    fn array_to_generic<E>(array: [E; N]) -> GenericArray<E, Self::ArrLen> {
-        GenericArray::from_array(array)
-    }
-
-    #[inline]
-    fn generic_to_array<E>(generic: GenericArray<E, Self::ArrLen>) -> [E; N] {
-        generic.into_array()
-    }
-}
-
-/// Convenience trait, used to signify that a pair of [`Conv`] implementors are **comp**atible with each other, meaning that [`GenericArray`]s sized with them can be converted [`Comp::fwd`] and [`Comp::bwd`].
-///
-/// This trait is sealed.
-pub trait Comp<Other: Conv>: Conv {
-    /// See [`Seal`]
-    const SEAL: Seal;
-
-    /// "forward" conversion
-    fn fwd<E>(value: GenericArray<E, Self::ArrLen>) -> GenericArray<E, Other::ArrLen>;
-
-    /// "backward" conversion
-    fn bwd<E>(value: GenericArray<E, Other::ArrLen>) -> GenericArray<E, Self::ArrLen>;
-}
-
-impl<T: Conv, Other: Conv> Comp<Other> for T
-where
-    T: Conv<ArrLen = Other::ArrLen>,
-{
-    const SEAL: Seal = Seal(());
-
-    #[inline]
-    fn fwd<E>(value: GenericArray<E, Self::ArrLen>) -> GenericArray<E, <Other as Conv>::ArrLen> {
-        value
-    }
-
-    #[inline]
-    fn bwd<E>(value: GenericArray<E, <Other as Conv>::ArrLen>) -> GenericArray<E, Self::ArrLen> {
-        value
-    }
-}
-
 use generic_array::{functional::FunctionalSequence, ArrayLength, GenericArray, IntoArrayLength};
 use nalgebra::{
-    allocator::Allocator, ArrayStorage, Dim, DimName, IsContiguous, Matrix, Owned, RawStorage,
+    allocator::Allocator, DefaultAllocator, IsContiguous, Matrix, OMatrix, Owned, RawStorage,
     RawStorageMut, Scalar, Storage,
 };
-use typenum::{Unsigned, B0, B1};
+
+mod conv;
+pub use conv::Conv;
 
 /// A stack-allocated storage, of [`typenum`]-backed col-major two dimensional array
 ///
@@ -226,13 +16,13 @@ use typenum::{Unsigned, B0, B1};
 #[derive(Debug)]
 #[repr(transparent)]
 pub struct GenericArrayStorage<T, R: Conv, C: Conv>(
-    pub GenericArray<GenericArray<T, R::ArrLen>, C::ArrLen>,
+    pub GenericArray<GenericArray<T, R::TNum>, C::TNum>,
 );
 
 impl<T, R: Conv, C: Conv> Clone for GenericArrayStorage<T, R, C>
 where
     T: Clone,
-    GenericArray<GenericArray<T, R::ArrLen>, C::ArrLen>: Clone,
+    GenericArray<GenericArray<T, R::TNum>, C::TNum>: Clone,
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
@@ -242,8 +32,8 @@ where
 impl<T, R: Conv, C: Conv> Copy for GenericArrayStorage<T, R, C>
 where
     T: Copy,
-    <R::ArrLen as ArrayLength>::ArrayType<T>: Copy,
-    <C::ArrLen as ArrayLength>::ArrayType<GenericArray<T, R::ArrLen>>: Copy,
+    <R::TNum as ArrayLength>::ArrayType<T>: Copy,
+    <C::TNum as ArrayLength>::ArrayType<GenericArray<T, R::TNum>>: Copy,
 {
 }
 
@@ -344,19 +134,33 @@ unsafe impl<R: Conv, C: Conv, T: nalgebra::Scalar> IsContiguous for GenericArray
 pub type GenericMatrix<T, R, C> =
     nalgebra::Matrix<T, <R as Conv>::Nalg, <C as Conv>::Nalg, GenericArrayStorage<T, R, C>>;
 
-impl<T, const AR: usize, const AC: usize, R: Conv + Corr<AR>, C: Conv + Corr<AC>>
-    From<[[T; AR]; AC]> for GenericArrayStorage<T, R, C>
+type TNum<const N: usize> = typenum::Const<N>;
+
+impl<T, const AR: usize, const AC: usize, R, C> From<[[T; AR]; AC]> for GenericArrayStorage<T, R, C>
+where
+    TNum<AR>: IntoArrayLength,
+    TNum<AC>: IntoArrayLength,
+    R: Conv<TNum = <TNum<AR> as IntoArrayLength>::ArrayLength>,
+    C: Conv<TNum = <TNum<AC> as IntoArrayLength>::ArrayLength>,
 {
     fn from(value: [[T; AR]; AC]) -> Self {
-        GenericArrayStorage(C::array_to_generic(value.map(R::array_to_generic)))
+        let tnum_array: GenericArray<
+            GenericArray<T, <TNum<AR> as IntoArrayLength>::ArrayLength>,
+            <TNum<AC> as IntoArrayLength>::ArrayLength,
+        > = GenericArray::from_array(value.map(GenericArray::from_array));
+        Self(tnum_array)
     }
 }
 
-impl<T, const AR: usize, const AC: usize, R: Conv + Corr<AR>, C: Conv + Corr<AC>>
-    From<GenericArrayStorage<T, R, C>> for [[T; AR]; AC]
+impl<T, const AR: usize, const AC: usize, R, C> From<GenericArrayStorage<T, R, C>> for [[T; AR]; AC]
+where
+    TNum<AR>: IntoArrayLength,
+    TNum<AC>: IntoArrayLength,
+    R: Conv<TNum = <TNum<AR> as IntoArrayLength>::ArrayLength>,
+    C: Conv<TNum = <TNum<AC> as IntoArrayLength>::ArrayLength>,
 {
-    fn from(value: GenericArrayStorage<T, R, C>) -> Self {
-        C::generic_to_array(value.0).map(R::generic_to_array)
+    fn from(GenericArrayStorage(data): GenericArrayStorage<T, R, C>) -> Self {
+        data.map(GenericArray::into_array).into_array()
     }
 }
 
@@ -371,8 +175,12 @@ pub trait GenericMatrixFromExt<R: Conv, C: Conv> {
     fn into_generic_matrix(self) -> GenericMatrix<Self::T, R, C>;
 }
 
-impl<T, const AR: usize, const AC: usize, R: Conv + Corr<AR>, C: Conv + Corr<AC>>
-    GenericMatrixFromExt<R, C> for [[T; AR]; AC]
+impl<T, const AR: usize, const AC: usize, R, C> GenericMatrixFromExt<R, C> for [[T; AR]; AC]
+where
+    TNum<AR>: IntoArrayLength,
+    TNum<AC>: IntoArrayLength,
+    R: Conv<TNum = <TNum<AR> as IntoArrayLength>::ArrayLength>,
+    C: Conv<TNum = <TNum<AC> as IntoArrayLength>::ArrayLength>,
 {
     type T = T;
 
@@ -381,27 +189,30 @@ impl<T, const AR: usize, const AC: usize, R: Conv + Corr<AR>, C: Conv + Corr<AC>
     }
 }
 
-// Yes, I AM sorry for the `T: Clone` here.
-impl<T: Clone, R: Conv, C: Conv, S: RawStorage<T, R::Nalg, C::Nalg> + IsContiguous>
-    GenericMatrixFromExt<R, C> for Matrix<T, R::Nalg, C::Nalg, S>
+impl<T, R, C> GenericMatrixFromExt<R, C> for OMatrix<T, R::Nalg, C::Nalg>
+where
+    T: Scalar,
+    R: Conv,
+    C: Conv,
+    DefaultAllocator: Allocator<R::Nalg, C::Nalg>,
 {
     type T = T;
 
     fn into_generic_matrix(self) -> GenericMatrix<Self::T, R, C> {
-        let (rows, rest) = GenericArray::<_, R::ArrLen>::chunks_from_slice(self.as_slice());
+        let (rows, rest) = GenericArray::<_, R::TNum>::chunks_from_slice(self.as_slice());
         debug_assert!(rest.is_empty(), "Should be no leftover");
-        let arr = GenericArray::<_, C::ArrLen>::from_slice(rows);
+        let arr = GenericArray::<_, C::TNum>::from_slice(rows);
         let storage = GenericArrayStorage(arr.clone());
         GenericMatrix::from_data(storage)
     }
 }
 
-/// Convenience trait defining [`GenericMatrix`] conversions.
+/// Conv trait defining [`GenericMatrix`] conversions.
 pub trait GenericMatrixExt {
     /// Type of the elements.
     ///
     /// This an associated type for the simple reason that is can be such.
-    type T;
+    type T: Scalar;
 
     /// Type defining rows count
     type R: Conv;
@@ -409,56 +220,50 @@ pub trait GenericMatrixExt {
     /// Type defining column count
     type C: Conv;
 
+    /// Converts [`GenericMatrix`] into regular [`nalgebra`] matrix, backed by core array (it's opaque about that though)
+    fn into_regular_matrix(
+        self,
+    ) -> OMatrix<Self::T, <Self::R as Conv>::Nalg, <Self::C as Conv>::Nalg>
+    where
+        nalgebra::DefaultAllocator:
+            nalgebra::allocator::Allocator<<Self::R as Conv>::Nalg, <Self::C as Conv>::Nalg>;
+
     /// Changes type of [`GenericMatrix`] to a different row and column count descriptors.
-    fn conv<NewR: Conv + Comp<Self::R>, NewC: Conv + Comp<Self::C>>(
+    fn conv<
+        NewR: Conv<TNum = <Self::R as Conv>::TNum>,
+        NewC: Conv<TNum = <Self::C as Conv>::TNum>,
+    >(
         self,
     ) -> GenericMatrix<Self::T, NewR, NewC>;
-
-    /// Converts [`GenericMatrix`] into core array-backed regular [`nalgebra`] matrix
-    fn into_array_matrix<const AR: usize, const AC: usize>(
-        self,
-    ) -> Matrix<
-        Self::T,
-        nalgebra::Const<AR>,
-        nalgebra::Const<AC>,
-        nalgebra::ArrayStorage<Self::T, AR, AC>,
-    >
-    where
-        Self::R: Corr<AR>,
-        Self::C: Corr<AC>;
 }
 
-impl<T, R: Conv, C: Conv> GenericMatrixExt for GenericMatrix<T, R, C> {
+impl<T: Scalar, R: Conv, C: Conv> GenericMatrixExt for GenericMatrix<T, R, C> {
     type T = T;
 
     type R = R;
 
     type C = C;
 
-    fn conv<NewR: Conv + Comp<Self::R>, NewC: Conv + Comp<Self::C>>(
+    fn into_regular_matrix(
         self,
-    ) -> GenericMatrix<Self::T, NewR, NewC> {
-        let data = self.data.0;
-        let mapped_cols = data.map(NewR::bwd);
-        let full_mapped = NewC::bwd(mapped_cols);
-        GenericMatrix::from_data(GenericArrayStorage(full_mapped))
+    ) -> OMatrix<Self::T, <Self::R as Conv>::Nalg, <Self::C as Conv>::Nalg>
+    where
+        DefaultAllocator: Allocator<<Self::R as Conv>::Nalg, <Self::C as Conv>::Nalg>,
+    {
+        Matrix::from_data(DefaultAllocator::allocate_from_iterator(
+            <Self::R as Conv>::new_nalg(),
+            <Self::C as Conv>::new_nalg(),
+            self.data.0.into_iter().flatten(),
+        ))
     }
 
-    fn into_array_matrix<const AR: usize, const AC: usize>(
+    fn conv<
+        NewR: Conv<TNum = <Self::R as Conv>::TNum>,
+        NewC: Conv<TNum = <Self::C as Conv>::TNum>,
+    >(
         self,
-    ) -> Matrix<
-        Self::T,
-        nalgebra::Const<AR>,
-        nalgebra::Const<AC>,
-        nalgebra::ArrayStorage<Self::T, AR, AC>,
-    >
-    where
-        Self::R: Corr<AR>,
-        Self::C: Corr<AC>,
-    {
-        let data = self.data;
-        let array: [[Self::T; AR]; AC] = data.into();
-        Matrix::from_data(ArrayStorage(array))
+    ) -> GenericMatrix<Self::T, NewR, NewC> {
+        GenericMatrix::from_data(GenericArrayStorage(self.data.0))
     }
 }
 

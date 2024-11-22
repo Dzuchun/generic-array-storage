@@ -27,7 +27,7 @@ fn into_regular() {
     let generic_matrix: GenericMatrix<i32, nalgebra::U3, nalgebra::U2> =
         [[1, 2, 5], [3, -4, 0]].into_generic_matrix();
 
-    let regular_matrix = generic_matrix.into_array_matrix::<3, 2>();
+    let regular_matrix = generic_matrix.into_regular_matrix();
 
     for i in 0..3 {
         for j in 0..2 {
