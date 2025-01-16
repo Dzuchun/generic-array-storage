@@ -71,7 +71,7 @@ Coolest thing is - this code is panic-free, fully statically checked, and missiz
 
 [`nalgebra`] is a matrix manipulation library, abstracted over type actually storing the elements. This allows matrices to be automatically stored on stock, if their dimensions can be inferred at compile-time.
 
-Generally, to store matrix on a stack entirely, you'll need for both of it's dimensions to be known, like `nalgrabra::U2` or `nalgebra::U3`. Unfortunately, default storage provided by `nalgebra` has a `const usize` type parameters, so they can't be used in case of sizes provided by associated constants.
+Generally, to store the entire matrix on stack, you'll need for both of it's dimensions to be known, like `nalgrabra::U2` or `nalgebra::U3`. Unfortunately, default storage provided by `nalgebra` has a `const usize` type parameters, so they can't be used in case of sizes provided by associated constants.
 
 ## What is `generic_array_storage`?
 
