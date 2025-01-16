@@ -1,5 +1,5 @@
-![CI status](https://github.com/Dzuchun/generic_array_storage/actions/workflows/build.yml/badge.svg)
-[![Documentation status](https://github.com/Dzuchun/generic_array_storage/actions/workflows/docs.yml/badge.svg)][docs]
+![CI status](https://github.com/Dzuchun/generic-array-storage/actions/workflows/build.yml/badge.svg)
+[![Documentation status](https://github.com/Dzuchun/generic-array-storage/actions/workflows/docs.yml/badge.svg)][docs]
 ```text
 This crate does not require nor std nor alloc. You're welcome ❤️
 ```
@@ -82,4 +82,4 @@ For ease of use, there's a `GenericMatrix` type alias, and `GenericMatrixExt` ex
 [`nalgebra`]: https://docs.rs/nalgebra/latest/nalgebra
 [`generic_array`]: https://docs.rs/generic-array/latest/generic_array
 [`typenum`]: https://docs.rs/typenum/latest/typenum
-[docs]: https://dzuchun.github.io/generic_array_storage/generic_array_storage/index.html
+[docs]: https://dzuchun.github.io/generic-array-storage/generic_array_storage/index.html
