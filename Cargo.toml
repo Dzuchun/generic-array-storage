@@ -15,7 +15,7 @@ exclude = [".github", ".gitignore"]
 [dependencies]
 generic-array = "1.2.0"
 nalgebra = { version = "0.33.2", default-features = false }
-typenum = { version = "1.17.0", features = ["no_std"] }
+typenum = { version = "1.18.0", features = ["no_std"] }
 
 [dev-dependencies]
 nalgebra = { version = "0.33.2" }
