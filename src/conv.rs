@@ -1,6 +1,6 @@
 use generic_array::{ArrayLength, IntoArrayLength};
 use nalgebra::{Const, DimName, DimNameAdd, DimNameMul, DimNameProd, DimNameSum, U0, U1, U2};
-use typenum::{UInt, UTerm, B0, B1};
+use typenum::{B0, B1, UInt, UTerm};
 
 /// Convenience trait, used to define type **conv**ersions
 ///

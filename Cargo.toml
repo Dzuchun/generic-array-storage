@@ -2,7 +2,7 @@
 name = "generic-array-storage"
 version = "0.3.0"
 authors = ["Diachenko Artem", "Artem 34ty804krytp92e239eku@gmail.com"]
-edition = "2021"
+edition = "2024"
 description = "`nalgebra` storage implementation backed by `generic_array`"
 documentation = "https://dzuchun.github.io/generic-array-storage/generic_array_storage/index.html"
 readme = "README.md"

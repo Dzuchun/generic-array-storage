@@ -3,10 +3,10 @@
 
 use core::fmt::Debug;
 
-use generic_array::{functional::FunctionalSequence, ArrayLength, GenericArray, IntoArrayLength};
+use generic_array::{ArrayLength, GenericArray, IntoArrayLength, functional::FunctionalSequence};
 use nalgebra::{
-    allocator::Allocator, DefaultAllocator, IsContiguous, Matrix, OMatrix, Owned, RawStorage,
-    RawStorageMut, Scalar, Storage,
+    DefaultAllocator, IsContiguous, Matrix, OMatrix, Owned, RawStorage, RawStorageMut, Scalar,
+    Storage, allocator::Allocator,
 };
 
 mod conv;
